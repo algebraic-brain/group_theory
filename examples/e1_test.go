@@ -28,3 +28,18 @@ func Test1(t *testing.T) {
 		t.Fatal("proofForth is not verified")
 	}
 }
+
+func Test2(t *testing.T) {
+	a, b := gt.NewNamed("a"), gt.NewNamed("b")
+	d := gt.Compose(a, b)
+
+	proofForth := func(x gt.Element) gt.Element {
+		return x.ToComposite().Left()
+	}
+
+	v := gt.VerifyForth(d, a, proofForth)
+
+	if v {
+		t.Fatal("proofForth is verified although it is not a proof")
+	}
+}
