@@ -61,8 +61,21 @@ func (el *element) Same(other Element) bool {
 	return el.tok == other.token()
 }
 
+func checkElement(a Element) {
+	_, ok1 := a.(*Composite)
+	_, ok2 := a.(*Inversed)
+	_, ok3 := a.(*Named)
+	_, ok4 := a.(*Identity)
+	if !(ok1 || ok2 || ok3 || ok4) {
+		panic("not a group element")
+	}
+}
+
 //Verify proof (forth, back) that $left = right$
 func Verify(left, right Element, forth, back func(Element) Element) bool {
+	checkElement(left)
+	checkElement(right)
+
 	l := left.CloneLiteral()
 	r := right.CloneLiteral()
 
@@ -76,6 +89,9 @@ func Verify(left, right Element, forth, back func(Element) Element) bool {
 }
 
 func VerifyForth(left, right Element, forth func(Element) Element) bool {
+	checkElement(left)
+	checkElement(right)
+
 	l := left.CloneLiteral()
 	r := right.CloneLiteral()
 
