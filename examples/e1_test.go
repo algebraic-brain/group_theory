@@ -33,6 +33,7 @@ func Test2(t *testing.T) {
 	a, b := gt.NewNamed("a"), gt.NewNamed("b")
 	d := gt.Compose(a, b)
 
+	//Try to cheat verifier:
 	proofForth := func(x gt.Element) gt.Element {
 		return x.ToComposite().Left()
 	}
