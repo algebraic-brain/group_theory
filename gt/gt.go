@@ -32,6 +32,7 @@ type Element interface {
 
 	setToken(int)
 	token() int
+	same(Element) bool
 }
 
 //Element prototype:
@@ -58,45 +59,33 @@ func (el *element) ToIdentity() *Identity   { panic("It's not Identity") }
 
 //Checks whether one of two elements was made from other during the proof
 func (el *element) Same(other Element) bool {
-	return el.tok == other.token()
+	return el.same(other)
 }
 
-func checkElement(a Element) {
-	_, ok1 := a.(*Composite)
-	_, ok2 := a.(*Inversed)
-	_, ok3 := a.(*Named)
-	_, ok4 := a.(*Identity)
-	if !(ok1 || ok2 || ok3 || ok4) {
-		panic("not a group element")
-	}
+func (el *element) same(other Element) bool {
+	return el.tok == other.token()
 }
 
 //Verify proof (forth, back) that $left = right$
 func Verify(left, right Element, forth, back func(Element) Element) bool {
-	checkElement(left)
-	checkElement(right)
-
 	l := left.CloneLiteral()
 	r := right.CloneLiteral()
 
 	lr := forth(l)
 	rl := back(r)
 
-	backIsStep := r.Same(rl)
-	forthIsStep := l.Same(lr)
+	backIsStep := r.same(rl)
+	forthIsStep := l.same(lr)
 
 	return forthIsStep && backIsStep && lr.EqualLiteral(r) && rl.EqualLiteral(l)
 }
 
 func VerifyForth(left, right Element, forth func(Element) Element) bool {
-	checkElement(left)
-	checkElement(right)
-
 	l := left.CloneLiteral()
 	r := right.CloneLiteral()
 
 	lr := forth(l)
-	forthIsStep := l.Same(lr)
+	forthIsStep := l.same(lr)
 
 	if !forthIsStep {
 		fmt.Println("VerifyForth: 'forth' is not step")
@@ -129,7 +118,7 @@ func Compose(a, b Element) *Composite {
 	return c
 }
 
-//Checks whether two elements are equal literally (although Same() may return false)
+//Checks whether two elements are equal literally (although same() may return false)
 func (c *Composite) EqualLiteral(other Element) bool {
 	if o, ok := other.(*Composite); ok {
 		return o.left.EqualLiteral(c.left) && o.right.EqualLiteral(c.right)
@@ -137,7 +126,7 @@ func (c *Composite) EqualLiteral(other Element) bool {
 	return false
 }
 
-//Makes literal clone of element (although Same() will return false)
+//Makes literal clone of element (although same() will return false)
 func (c *Composite) CloneLiteral() Element {
 	return Compose(c.left.CloneLiteral(), c.right.CloneLiteral())
 }
@@ -210,7 +199,7 @@ func (c *Composite) Map(left func(Element) Element, right func(Element) Element)
 	l := left(c.left)
 	r := right(c.right)
 	n := Compose(l, r)
-	if l.Same(c.left) && r.Same(c.right) {
+	if l.same(c.left) && r.same(c.right) {
 		n.setToken(c.token())
 	}
 	return n
@@ -243,7 +232,7 @@ func Inverse(el Element) *Inversed {
 	return n
 }
 
-//Checks whether two elements are equal literally (although Same() may return false)
+//Checks whether two elements are equal literally (although same() may return false)
 func (c *Inversed) EqualLiteral(other Element) bool {
 	if o, ok := other.(*Inversed); ok {
 		return o.operand.EqualLiteral(c.operand)
@@ -251,7 +240,7 @@ func (c *Inversed) EqualLiteral(other Element) bool {
 	return false
 }
 
-//Makes literal clone of element (although Same() will return false)
+//Makes literal clone of element (although same() will return false)
 func (c *Inversed) CloneLiteral() Element {
 	return Inverse(c.operand.CloneLiteral())
 }
@@ -260,7 +249,7 @@ func (c *Inversed) CloneLiteral() Element {
 func (c *Inversed) Map(f func(Element) Element) *Inversed {
 	op := f(c.operand)
 	n := Inverse(op)
-	if op.Same(c.operand) {
+	if op.same(c.operand) {
 		n.setToken(c.token())
 	}
 	return n
@@ -288,7 +277,7 @@ func NewNamed(name string) *Named {
 	return n
 }
 
-//Checks whether two elements are equal literally (although Same() may return false)
+//Checks whether two elements are equal literally (although same() may return false)
 func (c *Named) EqualLiteral(other Element) bool {
 	if o, ok := other.(*Named); ok {
 		return o.name == c.name
@@ -296,7 +285,7 @@ func (c *Named) EqualLiteral(other Element) bool {
 	return false
 }
 
-//Makes literal clone of element (although Same() will return false)
+//Makes literal clone of element (although same() will return false)
 func (c *Named) CloneLiteral() Element {
 	return NewNamed(c.name)
 }
@@ -315,13 +304,13 @@ func NewIdentity() *Identity {
 	return n
 }
 
-//Checks whether two elements are equal literally (although Same() may return false)
+//Checks whether two elements are equal literally (although same() may return false)
 func (c *Identity) EqualLiteral(other Element) bool {
 	_, ok := other.(*Identity)
 	return ok
 }
 
-//Makes literal clone of element (although Same() will return false)
+//Makes literal clone of element (although same() will return false)
 func (c *Identity) CloneLiteral() Element {
 	return NewIdentity()
 }
