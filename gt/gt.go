@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-var lastToken = 0
+var lastToken = 1
 var mut = &sync.Mutex{}
 
 func tok() int {
